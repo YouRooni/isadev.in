@@ -15,13 +15,13 @@
       "dns2.int.yt"
     ]
   },
-   {
+  {
    "subdomain": "intent",
     "owner": "gamming-service089",
     "ns": [
       "dns1.int.yt",
       "dns2.int.yt"
     ]
-   },
+  },
 ]
 
