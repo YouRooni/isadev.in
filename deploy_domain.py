@@ -15,7 +15,7 @@ BASE_URL = "https://panel.dns.int.yt/api/v1"
 ROOT_DOMAIN = "isadev.in"
 DOMAINS_FILE = "domains.json"
 
-API_KEY = os.environ["INTDNS_API_KEY"]
+API_KEY = os.environ["INTDNS_API_KEY"].strip()
 HEADERS = {
     "Authorization": f"Bearer {API_KEY}",
     "Content-Type": "application/json",
