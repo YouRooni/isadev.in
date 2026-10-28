@@ -23,6 +23,17 @@ jobs:
 
       - run: pip install requests
 
+      - name: Check secret is available
+        run: |
+          if [ -z "$INTDNS_API_KEY" ]; then
+            echo "ERROR: INTDNS_API_KEY secret is not set or not accessible"
+            exit 1
+          else
+            echo "OK: secret is set (length=${#INTDNS_API_KEY})"
+          fi
+        env:
+          INTDNS_API_KEY: ${{ secrets.INTDNS_API_KEY }}
+
       - name: Register NS records
         env:
           INTDNS_API_KEY: ${{ secrets.INTDNS_API_KEY }}
