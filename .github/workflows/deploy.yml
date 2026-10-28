@@ -1,31 +1,29 @@
 name: Deploy Domain
 
-on:
-  pull_request:
-    branches: [main]
-    paths:
-      - "domains.json"
-    types: [closed]
+    on:
+      push:
+        branches: [main]
+        paths:
+          - "domains.json"
 
-permissions:
-  contents: read
+    permissions:
+      contents: read
 
-jobs:
-  deploy:
-    if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
+    jobs:
+      deploy:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+            with:
+              fetch-depth: 2
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+          - uses: actions/setup-python@v5
+            with:
+              python-version: "3.12"
 
-      - run: pip install requests
+          - run: pip install requests
 
-      - name: Register NS records
-        env:
-          INTDNS_API_KEY: ${{ secrets.INTDNS_API_KEY }}
-        run: python scripts/deploy_domain.py
+          - name: Register NS records
+            env:
+              INTDNS_API_KEY: ${{ secrets.INTDNS_API_KEY }}
+            run: python scripts/deploy_domain.py
