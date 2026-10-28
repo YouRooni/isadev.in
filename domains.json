@@ -22,5 +22,13 @@
       "dns1.int.yt",
       "dns2.int.yt"
     ]
-  }
+  },
+  {
+  "subdomain": "sreervaj",
+  "owner": "gamming-service",
+  "ns": [
+    "dns1.int.yt",
+    "dns2.int.yt"
+  ]
+}
 ]
