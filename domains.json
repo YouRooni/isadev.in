@@ -29,6 +29,14 @@
   "ns": [
     "dns1.int.yt",
     "dns2.int.yt"
-  ]
-}
+    ]
+  },
+  {
+  "subdomain": "test01",
+  "owner": "gamming-service",
+  "ns": [
+    "dns1.int.yt",
+    "dns2.int.yt"
+    ]
+  }
 ]
