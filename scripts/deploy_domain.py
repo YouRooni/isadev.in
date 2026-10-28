@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """
-Runs when a PR is merged. Reads the new entry from domains.json,
-creates the DNS zone, and adds NS records via Intent-DNS API.
+Runs on push to main. Reads domains.json and registers any subdomain
+that isn't already in Intent-DNS. Source of truth is the API, not git.
 """
 
 import json
 import os
 import sys
-import subprocess
 
 import requests
 
@@ -21,26 +20,13 @@ HEADERS = {
     "Content-Type": "application/json",
 }
 
-
-def get_base_domains() -> list:
-    """Walk back commits until we find a valid domains.json."""
-    for ref in ["HEAD~1", "HEAD~2", "HEAD~3", "HEAD~4", "HEAD~5"]:
-        result = subprocess.run(
-            ["git", "show", f"{ref}:domains.json"],
-            capture_output=True, text=True,
-        )
-        if result.returncode != 0:
-            continue
-        try:
-            return json.loads(result.stdout)
-        except json.JSONDecodeError:
-            continue
-    return []
+SKIP = {"example"}  # placeholder entries to never deploy
 
 
-def get_current_domains() -> list:
-    with open(DOMAINS_FILE) as f:
-        return json.load(f)
+def get_registered() -> set[str]:
+    resp = requests.get(f"{BASE_URL}/domains", headers=HEADERS)
+    resp.raise_for_status()
+    return {d["domain"].lower() for d in resp.json().get("domains", [])}
 
 
 def create_zone(full_domain: str) -> int:
@@ -54,16 +40,13 @@ def create_zone(full_domain: str) -> int:
         all_resp.raise_for_status()
         for d in all_resp.json().get("domains", []):
             if d["domain"].lower() == full_domain.lower():
-                print(f"Zone already exists: {full_domain} → id={d['id']}")
                 return d["id"]
-        raise RuntimeError(f"409 but zone not found in list: {full_domain}")
+        raise RuntimeError(f"409 but not found: {full_domain}")
     resp.raise_for_status()
-    domain_id = resp.json()["domain"]["id"]
-    print(f"Zone created: {full_domain} → id={domain_id}")
-    return domain_id
+    return resp.json()["domain"]["id"]
 
 
-def add_ns_record(domain_id: int, ns: str):
+def add_ns(domain_id: int, ns: str):
     resp = requests.post(
         f"{BASE_URL}/domains/{domain_id}/records",
         headers=HEADERS,
@@ -73,44 +56,39 @@ def add_ns_record(domain_id: int, ns: str):
     print(f"  NS → {ns}")
 
 
-def test_auth():
-    """Quick auth check before doing anything."""
-    resp = requests.get(f"{BASE_URL}/user", headers=HEADERS)
-    if resp.status_code == 401:
-        print(f"AUTH FAILED — key prefix: {API_KEY[:12]}... (len={len(API_KEY)})", file=sys.stderr)
-        print(f"Response: {resp.text}", file=sys.stderr)
-        sys.exit(1)
-    resp.raise_for_status()
-    print(f"Auth OK — logged in as: {resp.json().get('account', {}).get('username', '?')}")
-
-
 def main():
-    test_auth()
-    base = get_base_domains()
-    current = get_current_domains()
+    with open(DOMAINS_FILE) as f:
+        entries = json.load(f)
 
-    base_subs = {e["subdomain"].lower() for e in base}
-    new_entries = [e for e in current if e["subdomain"].lower() not in base_subs]
-
-    if not new_entries:
-        print("No new entries found — nothing to deploy.")
-        return
+    registered = get_registered()
+    print(f"Already registered: {len(registered)} zones")
 
     errors = []
-    for entry in new_entries:
-        subdomain = entry["subdomain"]
+    deployed = 0
+
+    for entry in entries:
+        subdomain = entry["subdomain"].lower()
+        if subdomain in SKIP:
+            continue
+
         full_domain = f"{subdomain}.{ROOT_DOMAIN}"
-        ns_list = entry["ns"]
+
+        if full_domain in registered:
+            print(f"Skip (exists): {full_domain}")
+            continue
 
         print(f"\n--- Deploying {full_domain} ---")
         try:
             domain_id = create_zone(full_domain)
-            for ns in ns_list:
-                add_ns_record(domain_id, ns)
+            for ns in entry["ns"]:
+                add_ns(domain_id, ns)
             print(f"Done: {full_domain}")
+            deployed += 1
         except Exception as e:
             errors.append(f"{full_domain}: {e}")
-            print(f"ERROR: {full_domain}: {e}", file=sys.stderr)
+            print(f"ERROR: {e}", file=sys.stderr)
+
+    print(f"\nDeployed {deployed} new zone(s).")
 
     if errors:
         for e in errors:
