@@ -6,5 +6,13 @@
       "ns1.yourdomain.com",
       "ns2.yourdomain.com"
     ]
+  },
+  {
+   "subdomain": "1224huangjin",
+    "owner": "1224huangjin",
+    "ns": [
+      "dns1.int.yt",
+      "dns2.int.yt"
+    ]
   }
 ]
