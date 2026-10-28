@@ -14,7 +14,7 @@
       "dns1.int.yt",
       "dns2.int.yt"
     ]
-  }
+  },
    {
    "subdomain": "intent",
     "owner": "gamming-service089",
@@ -22,6 +22,6 @@
       "dns1.int.yt",
       "dns2.int.yt"
     ]
-  }
+   },
 ]
 
