@@ -8,10 +8,11 @@ Get a free `*.isadev.in` subdomain. Point it to your own nameservers.
 
 ## How to register
 
-1. **Fork** this repo
-2. Add your entry to `domains.json`
-3. Open a **PR** — a bot checks for conflicts instantly
-4. Once merged, your NS records go live within minutes
+1. **Star** this repo.
+2. **Fork** this repo.
+3. Add your entry to `domains.json`.
+4. Open a **PR** — a bot checks for conflicts instantly.
+5. Once merged, your NS records go live within minutes.
 
 ---
 
